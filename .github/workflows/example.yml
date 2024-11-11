@@ -1,4 +1,3 @@
-# In your workflow file (.github/workflows/example.yml).....
 name: CI Pipeline
 
 on:
@@ -52,4 +51,3 @@ jobs:
 
       - name: Deploy Application
         run: echo "Deploying application..."
-
