@@ -9,25 +9,25 @@ on:
       - main
 
 jobs:
-  # Build Job with DinD
+  # Build Job with Docker-in-Docker (DinD)
   build:
     runs-on: arc-runner-set
     services:
       docker:
         image: docker:stable-dind
-        options: --privileged  # Required for DinD
+        options: --privileged --host=unix:///var/run/docker.sock  # Ensures the docker socket is accessible
     steps:
       - name: Check out code
         uses: actions/checkout@v2
 
       - name: Set up Docker
         run: |
-          # Start Docker daemon inside the service container
+          # Check if Docker is running
           docker info
 
       - name: Build Docker Image
         run: |
-          # Run Docker commands
+          # Build the Docker image
           docker build -t my-image .
 
   # Test Job
