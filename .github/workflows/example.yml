@@ -1,79 +1,38 @@
-name: CI Pipeline
-
+name: Docker in Docker Workflow
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
-  # Build Job with Docker-in-Docker (DinD)
   build:
     runs-on: arc-runner-set
     services:
-      docker:
-        image: docker:stable-dind
-        options: --privileged --host=unix:///var/run/docker.sock  # Ensures the Docker socket is accessible
+      dind:
+        image: docker:dind
+        privileged: true
+        env:
+          DOCKER_TLS_CERTDIR: ""
+        ports:
+          - 2375:2375
+
     steps:
-      - name: Check out code
-        uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Set up Docker
+      - name: Set up Docker BuildX
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: network=host
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: myapp:latest
+          
+      - name: Test in DinD
         run: |
-          # Check if Docker is running
-          docker info
-
-      - name: Build Docker Image
-        run: |
-          # Build the Docker image
-          docker build -t my-image .
-
-      - name: Verify Docker Socket
-        run: |
-          # Verify the Docker socket inside the container
-          ls -l /var/run/docker.sock
-
-      - name: Check Docker Version
-        run: |
-          # Check Docker version
-          docker version
-
-      - name: List Running Containers
-        run: |
-          # List running containers to verify everything is set up correctly
-          docker ps
-
-  # Test Job
-  test:
-    runs-on: arc-runner-set
-    needs: build
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-
-      - name: Run Tests
-        run: echo "Running tests..."
-
-  # Lint Job
-  lint:
-    runs-on: arc-runner-set
-    needs: build
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-
-      - name: Lint Code
-        run: echo "Linting code..."
-
-  # Deploy Job
-  deploy:
-    runs-on: arc-runner-set
-    needs: [build, test, lint]
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-
-      - name: Deploy Application
-        run: echo "Deploying application..."
+          docker run --rm myapp:latest test
