@@ -15,7 +15,7 @@ jobs:
     services:
       docker:
         image: docker:stable-dind
-        options: --privileged --host=unix:///var/run/docker.sock  # Ensures the docker socket is accessible
+        options: --privileged --host=unix:///var/run/docker.sock  # Ensures the Docker socket is accessible
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -29,6 +29,21 @@ jobs:
         run: |
           # Build the Docker image
           docker build -t my-image .
+
+      - name: Verify Docker Socket
+        run: |
+          # Verify the Docker socket inside the container
+          ls -l /var/run/docker.sock
+
+      - name: Check Docker Version
+        run: |
+          # Check Docker version
+          docker version
+
+      - name: List Running Containers
+        run: |
+          # List running containers to verify everything is set up correctly
+          docker ps
 
   # Test Job
   test:
