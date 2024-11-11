@@ -1,9 +1,55 @@
 # In your workflow file (.github/workflows/example.yml)
-name: My Workflow
-on: [push]
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
 jobs:
+  # Build Job
   build:
     runs-on: arc-runner-set
     steps:
-      - uses: actions/checkout@v2
-      - run: echo "Hello from self-hosted runner!"
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Build Application
+        run: echo "Building application..."
+
+  # Test Job
+  test:
+    runs-on: arc-runner-set
+    needs: build
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Run Tests
+        run: echo "Running tests..."
+
+  # Lint Job
+  lint:
+    runs-on: arc-runner-set
+    needs: build
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Lint Code
+        run: echo "Linting code..."
+
+  # Deploy Job
+  deploy:
+    runs-on: arc-runner-set
+    needs: [build, test, lint]
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Deploy Application
+        run: echo "Deploying application..."
+
